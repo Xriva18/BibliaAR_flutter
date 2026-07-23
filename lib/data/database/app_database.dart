@@ -6,7 +6,7 @@ import 'package:biblia_ar_flutter/data/models/leccion_categoria.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
-// kguanoluisa, Base de datos SQLite con migracion v2 de categoria y seed de tramite eGovernment, variable v_database, 2026-07-23
+// kguanoluisa, Base de datos SQLite con migracion v2 de categoria en lecciones, variable v_database, 2026-07-23
 class AppDatabase {
   AppDatabase._();
 
@@ -35,14 +35,12 @@ class AppDatabase {
           await db.execute(statement);
         }
         await _seedInitialData(db);
-        await _seedTramiteData(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < MigrationV2.version) {
           for (final statement in MigrationV2.statements) {
             await db.execute(statement);
           }
-          await _seedTramiteData(db);
         }
       },
     );
@@ -113,48 +111,6 @@ class AppDatabase {
     for (final actividad in actividadesSeed) {
       await db.insert('actividades', actividad);
     }
-  }
-
-  Future<void> _seedTramiteData(Database db) async {
-    final existente = await db.query(
-      'lecciones',
-      where: 'categoria = ?',
-      whereArgs: [LeccionCategoria.tramite],
-      limit: 1,
-    );
-    if (existente.isNotEmpty) {
-      return;
-    }
-
-    final now = DateTime.now().toIso8601String();
-    const tramitePath = 'assets/lessons/certificado_residencia/fragments.json';
-
-    final leccionId = await db.insert('lecciones', {
-      'titulo': 'Certificado de residencia',
-      'referencia_biblica': 'Trámite municipal demo',
-      'contenido_multimedia_path': tramitePath,
-      'categoria': LeccionCategoria.tramite,
-      'orden': 1,
-      'updated_at': now,
-      'sync_status': 'local',
-    });
-
-    await db.insert('actividades', {
-      'leccion_id': leccionId,
-      'tipo': 'checklist',
-      'payload_json': jsonEncode({
-        'titulo': '¿Qué documentos necesito?',
-        'instruccion': 'Marca los documentos requeridos',
-        'elementos': [
-          'Cédula de identidad',
-          'Planilla de servicios básicos',
-          'Comprobante de pago',
-        ],
-        'requeridos': [0, 1, 2],
-      }),
-      'updated_at': now,
-      'sync_status': 'local',
-    });
   }
 
   Future<void> close() async {

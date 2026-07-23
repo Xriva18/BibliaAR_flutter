@@ -4,8 +4,7 @@ import 'package:biblia_ar_flutter/features/activities/activities_hub_screen.dart
 import 'package:biblia_ar_flutter/features/ar_simulation/ar_preview_args.dart';
 import 'package:biblia_ar_flutter/features/ar_simulation/ar_preview_screen.dart';
 import 'package:biblia_ar_flutter/features/auth/login_screen.dart';
-import 'package:biblia_ar_flutter/features/egov/tramite_player_screen.dart';
-import 'package:biblia_ar_flutter/features/egov/tramites_hub_screen.dart';
+import 'package:biblia_ar_flutter/features/egov/tramites_upload_screen.dart';
 import 'package:biblia_ar_flutter/features/home/home_screen.dart';
 import 'package:biblia_ar_flutter/features/lesson/lesson_player_screen.dart';
 import 'package:biblia_ar_flutter/features/progress/progress_screen.dart';
@@ -14,7 +13,7 @@ import 'package:biblia_ar_flutter/features/splash/splash_screen.dart';
 import 'package:biblia_ar_flutter/features/teacher/teacher_screen.dart';
 import 'package:flutter/material.dart';
 
-// kguanoluisa, Enrutador central con transiciones fade-slide y rutas AR/tramites, sin nuevas variables, 2026-07-23
+// kguanoluisa, Enrutador central con ruta de tramites simplificada a subida de documentos, sin nuevas variables, 2026-07-23
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -36,19 +35,7 @@ class AppRouter {
           settings,
         );
       case RouteNames.tramites:
-        return RouteTransitions.fadeSlide(const TramitesHubScreen(), settings);
-      case RouteNames.tramite:
-        final leccionId = settings.arguments as int? ?? 2;
-        return RouteTransitions.fadeSlide(
-          TramitePlayerScreen(vLeccionId: leccionId),
-          settings,
-        );
-      case RouteNames.tramiteActividad:
-        final leccionId = settings.arguments as int? ?? 2;
-        return RouteTransitions.fadeSlide(
-          ActivitiesHubScreen(vLeccionId: leccionId),
-          settings,
-        );
+        return RouteTransitions.fadeSlide(const TramitesUploadScreen(), settings);
       case RouteNames.activities:
         return RouteTransitions.fadeSlide(const ActivitiesHubScreen(), settings);
       case RouteNames.settings:

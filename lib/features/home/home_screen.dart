@@ -112,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                     BiarMenuCard(
                       vTitulo: 'Trámites',
-                      vSubtitulo: 'Trámites accesibles',
+                      vSubtitulo: 'Sube tus documentos',
                       vIcono: BiarModuleIcons.tramites,
                       vColor: BiarTheme.infoColor,
                       onTap: () => Navigator.pushNamed(context, RouteNames.tramites),

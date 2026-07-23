@@ -7,13 +7,12 @@ import 'package:biblia_ar_flutter/features/activities/actividad_provider.dart';
 import 'package:biblia_ar_flutter/features/activities/widgets/completar_actividad_widget.dart';
 import 'package:biblia_ar_flutter/features/activities/widgets/identificar_actividad_widget.dart';
 import 'package:biblia_ar_flutter/features/activities/widgets/ordenar_actividad_widget.dart';
-import 'package:biblia_ar_flutter/features/egov/widgets/checklist_actividad_widget.dart';
 import 'package:biblia_ar_flutter/features/profiles/perfil_provider.dart';
 import 'package:biblia_ar_flutter/shared/widgets/biar_loading_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// kguanoluisa, Hub de actividades con iconos por tipo incluyendo checklist eGovernment, sin nuevas variables, 2026-07-23
+// kguanoluisa, Hub de actividades biblicas con iconos por tipo, sin nuevas variables, 2026-07-23
 class ActivitiesHubScreen extends StatefulWidget {
   const ActivitiesHubScreen({super.key, this.vLeccionId = 1});
 
@@ -145,10 +144,7 @@ class _ActivitiesHubScreenState extends State<ActivitiesHubScreen> {
           onResultado: (correcto) => _registrarResultado(actividadId, correcto),
         );
       case TipoActividad.checklist:
-        return ChecklistActividadWidget(
-          payload: payload,
-          onResultado: (correcto) => _registrarResultado(actividadId, correcto),
-        );
+        return const Text('Actividad no disponible en esta versión.');
     }
   }
 }
