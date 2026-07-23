@@ -1,13 +1,16 @@
+import 'package:biblia_ar_flutter/core/accessibility/biar_design_tokens.dart';
+import 'package:biblia_ar_flutter/core/accessibility/biar_theme.dart';
 import 'package:biblia_ar_flutter/core/routing/route_names.dart';
 import 'package:biblia_ar_flutter/core/session/usage_timer_service.dart';
 import 'package:biblia_ar_flutter/data/models/tipo_usuario.dart';
+import 'package:biblia_ar_flutter/features/auth/auth_provider.dart';
 import 'package:biblia_ar_flutter/features/profiles/perfil_provider.dart';
-import 'package:biblia_ar_flutter/shared/widgets/biar_button.dart';
+import 'package:biblia_ar_flutter/shared/widgets/biar_menu_card.dart';
 import 'package:biblia_ar_flutter/shared/widgets/usage_alert_listener.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// kguanoluisa, Menu principal accesible con navegacion de maximo dos niveles, sin nuevas variables, 2026-07-23
+// kguanoluisa, Home rediseñado con grid de BiarMenuCard, badge de rol y acceso a tramites, sin nuevas variables, 2026-07-23
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -47,16 +50,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> _cerrarSesion() async {
     await context.read<PerfilProvider>().cerrarSesionPerfil();
-    if (!mounted) {
-      return;
-    }
-    Navigator.pushNamedAndRemoveUntil(context, RouteNames.profiles, (_) => false);
+    if (!mounted) return;
+    await context.read<AuthProvider>().cerrarSesion();
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, RouteNames.login, (_) => false);
   }
 
   @override
   Widget build(BuildContext context) {
     final perfil = context.watch<PerfilProvider>().vPerfilActivo;
     final esDocente = perfil?.tipoUsuario == TipoUsuario.docente;
+    final rolLabel = esDocente ? 'Docente' : 'Niño';
 
     return UsageAlertListener(
       child: Scaffold(
@@ -64,53 +68,77 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           title: Text('Hola, ${perfil?.nombre ?? 'Usuario'}'),
           actions: [
             IconButton(
-              tooltip: 'Cambiar perfil',
+              tooltip: 'Cerrar sesión',
               onPressed: _cerrarSesion,
-              icon: const Icon(Icons.switch_account),
+              icon: const Icon(Icons.logout),
             ),
           ],
         ),
         body: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(BiarSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                '¿Qué quieres hacer hoy?',
-                style: Theme.of(context).textTheme.titleLarge,
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '¿Qué quieres hacer hoy?',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  Chip(label: Text(rolLabel)),
+                ],
               ),
-              const SizedBox(height: 16),
-              BiarButton(
-                label: 'Historias bíblicas',
-                icon: Icons.auto_stories,
-                onPressed: () => Navigator.pushNamed(context, RouteNames.lesson),
-              ),
-              const SizedBox(height: 12),
-              BiarButton(
-                label: 'Actividades',
-                icon: Icons.extension,
-                onPressed: () => Navigator.pushNamed(context, RouteNames.activities),
-              ),
-              const SizedBox(height: 12),
-              BiarButton(
-                label: 'Mi progreso',
-                icon: Icons.insights,
-                onPressed: () => Navigator.pushNamed(context, RouteNames.progress),
-              ),
-              const SizedBox(height: 12),
-              BiarButton(
-                label: 'Accesibilidad',
-                icon: Icons.accessibility_new,
-                onPressed: () => Navigator.pushNamed(context, RouteNames.settings),
-              ),
-              if (esDocente) ...[
-                const SizedBox(height: 12),
-                BiarButton(
-                  label: 'Panel docente',
-                  icon: Icons.school,
-                  onPressed: () => Navigator.pushNamed(context, RouteNames.teacher),
+              const SizedBox(height: BiarSpacing.md),
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: BiarSpacing.sm,
+                  mainAxisSpacing: BiarSpacing.sm,
+                  childAspectRatio: 0.95,
+                  children: [
+                    BiarMenuCard(
+                      vTitulo: 'Historias',
+                      vSubtitulo: 'El Buen Samaritano',
+                      vIcono: BiarModuleIcons.historias,
+                      onTap: () => Navigator.pushNamed(context, RouteNames.lesson),
+                    ),
+                    BiarMenuCard(
+                      vTitulo: 'Actividades',
+                      vSubtitulo: 'Juegos de repaso',
+                      vIcono: BiarModuleIcons.actividades,
+                      onTap: () => Navigator.pushNamed(context, RouteNames.activities),
+                    ),
+                    BiarMenuCard(
+                      vTitulo: 'Trámites',
+                      vSubtitulo: 'Trámites accesibles',
+                      vIcono: BiarModuleIcons.tramites,
+                      vColor: BiarTheme.infoColor,
+                      onTap: () => Navigator.pushNamed(context, RouteNames.tramites),
+                    ),
+                    BiarMenuCard(
+                      vTitulo: 'Progreso',
+                      vSubtitulo: 'Tu avance',
+                      vIcono: BiarModuleIcons.progreso,
+                      onTap: () => Navigator.pushNamed(context, RouteNames.progress),
+                    ),
+                    BiarMenuCard(
+                      vTitulo: 'Accesibilidad',
+                      vSubtitulo: 'LSE, audio, subtítulos',
+                      vIcono: BiarModuleIcons.accesibilidad,
+                      onTap: () => Navigator.pushNamed(context, RouteNames.settings),
+                    ),
+                    if (esDocente)
+                      BiarMenuCard(
+                        vTitulo: 'Panel docente',
+                        vSubtitulo: 'Seguimiento local',
+                        vIcono: BiarModuleIcons.docente,
+                        onTap: () => Navigator.pushNamed(context, RouteNames.teacher),
+                      ),
+                  ],
                 ),
-              ],
+              ),
             ],
           ),
         ),

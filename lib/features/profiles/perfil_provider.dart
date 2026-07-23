@@ -74,6 +74,35 @@ class PerfilProvider extends ChangeNotifier {
         .where((perfil) => perfil.tipoUsuario == TipoUsuario.nino)
         .toList();
   }
+
+  // kguanoluisa, Resuelve o crea el perfil activo segun el rol autenticado sin pantalla de seleccion, variable v_tipoUsuario, 2026-07-23
+  Future<Perfil> resolverPerfilDesdeSesion({
+    required TipoUsuario vTipoUsuario,
+  }) async {
+    await cargarPerfiles();
+
+    final nombrePerfil = vTipoUsuario == TipoUsuario.docente ? 'Docente' : 'Niño';
+    Perfil? perfilExistente;
+    for (final perfil in vPerfiles) {
+      if (perfil.tipoUsuario == vTipoUsuario &&
+          perfil.nombre.toLowerCase() == nombrePerfil.toLowerCase()) {
+        perfilExistente = perfil;
+        break;
+      }
+    }
+
+    if (perfilExistente != null) {
+      await seleccionarPerfil(perfilExistente);
+      return perfilExistente;
+    }
+
+    final perfilCreado = await crearPerfil(
+      nombre: nombrePerfil,
+      tipoUsuario: vTipoUsuario,
+    );
+    await seleccionarPerfil(perfilCreado);
+    return perfilCreado;
+  }
 }
 
 // kguanoluisa, Provider de configuracion sensorial persistente por perfil, variable v_configuracion, 2026-07-23

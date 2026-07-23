@@ -16,6 +16,18 @@ class PictogramBar extends StatelessWidget {
         return Icons.volunteer_activism;
       case 'camino':
         return Icons.route;
+      case 'tramite':
+        return Icons.assignment;
+      case 'municipio':
+        return Icons.account_balance;
+      case 'cedula':
+        return Icons.badge;
+      case 'documento':
+        return Icons.description;
+      case 'entrega':
+        return Icons.outbox;
+      case 'certificado':
+        return Icons.verified;
       default:
         return Icons.image;
     }

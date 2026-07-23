@@ -1,7 +1,8 @@
+import 'package:biblia_ar_flutter/core/accessibility/biar_design_tokens.dart';
 import 'package:biblia_ar_flutter/shared/widgets/biar_button.dart';
 import 'package:flutter/material.dart';
 
-// kguanoluisa, Widget de actividad tipo ordenar secuencia con reordenamiento manual, variable v_elementos, 2026-07-23
+// kguanoluisa, Actividad ordenar con badges numerados y resaltado animado del item movido, variable v_indiceResaltado, 2026-07-23
 class OrdenarActividadWidget extends StatefulWidget {
   const OrdenarActividadWidget({
     super.key,
@@ -18,6 +19,7 @@ class OrdenarActividadWidget extends StatefulWidget {
 
 class _OrdenarActividadWidgetState extends State<OrdenarActividadWidget> {
   late List<String> vElementos;
+  int? vIndiceResaltado;
 
   @override
   void initState() {
@@ -33,6 +35,10 @@ class _OrdenarActividadWidgetState extends State<OrdenarActividadWidget> {
     setState(() {
       final item = vElementos.removeAt(index);
       vElementos.insert(nuevoIndex, item);
+      vIndiceResaltado = nuevoIndex;
+    });
+    Future.delayed(BiarDurations.fast, () {
+      if (mounted) setState(() => vIndiceResaltado = null);
     });
   }
 
@@ -63,25 +69,48 @@ class _OrdenarActividadWidgetState extends State<OrdenarActividadWidget> {
           widget.payload['titulo'] as String,
           style: Theme.of(context).textTheme.titleLarge,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: BiarSpacing.sm),
         Text(widget.payload['instruccion'] as String),
-        const SizedBox(height: 12),
+        const SizedBox(height: BiarSpacing.md),
         ...List.generate(vElementos.length, (index) {
-          return Card(
-            child: ListTile(
-              title: Text('${index + 1}. ${vElementos[index]}'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_upward),
-                    onPressed: () => _mover(index, -1),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.arrow_downward),
-                    onPressed: () => _mover(index, 1),
-                  ),
-                ],
+          final resaltado = vIndiceResaltado == index;
+          return AnimatedContainer(
+            duration: BiarDurations.fast,
+            curve: Curves.easeOut,
+            margin: const EdgeInsets.only(bottom: BiarSpacing.sm),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(BiarRadius.md),
+              border: Border.all(
+                color: resaltado
+                    ? Theme.of(context).colorScheme.secondary
+                    : Colors.transparent,
+                width: 2,
+              ),
+              color: resaltado
+                  ? Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.4)
+                  : null,
+            ),
+            child: Card(
+              margin: EdgeInsets.zero,
+              elevation: resaltado ? 4 : 1,
+              child: ListTile(
+                leading: CircleAvatar(
+                  child: Text('${index + 1}'),
+                ),
+                title: Text(vElementos[index]),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_upward),
+                      onPressed: () => _mover(index, -1),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.arrow_downward),
+                      onPressed: () => _mover(index, 1),
+                    ),
+                  ],
+                ),
               ),
             ),
           );

@@ -15,6 +15,18 @@ class SqliteLeccionRepository implements LeccionRepository {
   }
 
   @override
+  Future<List<Leccion>> obtenerPorCategoria(String categoria) async {
+    final db = await _database.database;
+    final rows = await db.query(
+      'lecciones',
+      where: 'categoria = ?',
+      whereArgs: [categoria],
+      orderBy: 'orden ASC',
+    );
+    return rows.map(Leccion.fromMap).toList();
+  }
+
+  @override
   Future<Leccion?> obtenerPorId(int id) async {
     final db = await _database.database;
     final rows = await db.query(

@@ -1,39 +1,64 @@
 import 'package:biblia_ar_flutter/core/routing/route_names.dart';
+import 'package:biblia_ar_flutter/core/routing/route_transitions.dart';
 import 'package:biblia_ar_flutter/features/activities/activities_hub_screen.dart';
+import 'package:biblia_ar_flutter/features/ar_simulation/ar_preview_args.dart';
+import 'package:biblia_ar_flutter/features/ar_simulation/ar_preview_screen.dart';
+import 'package:biblia_ar_flutter/features/auth/login_screen.dart';
+import 'package:biblia_ar_flutter/features/egov/tramite_player_screen.dart';
+import 'package:biblia_ar_flutter/features/egov/tramites_hub_screen.dart';
 import 'package:biblia_ar_flutter/features/home/home_screen.dart';
 import 'package:biblia_ar_flutter/features/lesson/lesson_player_screen.dart';
-import 'package:biblia_ar_flutter/features/profiles/create_profile_screen.dart';
-import 'package:biblia_ar_flutter/features/profiles/profile_selection_screen.dart';
 import 'package:biblia_ar_flutter/features/progress/progress_screen.dart';
 import 'package:biblia_ar_flutter/features/settings/settings_screen.dart';
 import 'package:biblia_ar_flutter/features/splash/splash_screen.dart';
 import 'package:biblia_ar_flutter/features/teacher/teacher_screen.dart';
 import 'package:flutter/material.dart';
 
-// kguanoluisa, Enrutador central con navegacion jerarquica de maximo dos niveles, sin nuevas variables, 2026-07-23
+// kguanoluisa, Enrutador central con transiciones fade-slide y rutas AR/tramites, sin nuevas variables, 2026-07-23
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case RouteNames.splash:
-        return MaterialPageRoute(builder: (_) => const SplashScreen());
+        return RouteTransitions.fadeSlide(const SplashScreen(), settings);
+      case RouteNames.login:
+        return RouteTransitions.fadeSlide(const LoginScreen(), settings);
       case RouteNames.profiles:
-        return MaterialPageRoute(builder: (_) => const ProfileSelectionScreen());
       case RouteNames.createProfile:
-        return MaterialPageRoute(builder: (_) => const CreateProfileScreen());
+        return RouteTransitions.fadeSlide(const HomeScreen(), settings);
       case RouteNames.home:
-        return MaterialPageRoute(builder: (_) => const HomeScreen());
+        return RouteTransitions.fadeSlide(const HomeScreen(), settings);
       case RouteNames.lesson:
-        return MaterialPageRoute(builder: (_) => const LessonPlayerScreen());
+        return RouteTransitions.fadeSlide(const LessonPlayerScreen(), settings);
+      case RouteNames.arPreview:
+        final args = settings.arguments as ArPreviewArgs?;
+        return RouteTransitions.fadeSlide(
+          ArPreviewScreen(vArgs: args ?? const ArPreviewArgs(vTitulo: 'Vista AR', vOverlayAsset: '')),
+          settings,
+        );
+      case RouteNames.tramites:
+        return RouteTransitions.fadeSlide(const TramitesHubScreen(), settings);
+      case RouteNames.tramite:
+        final leccionId = settings.arguments as int? ?? 2;
+        return RouteTransitions.fadeSlide(
+          TramitePlayerScreen(vLeccionId: leccionId),
+          settings,
+        );
+      case RouteNames.tramiteActividad:
+        final leccionId = settings.arguments as int? ?? 2;
+        return RouteTransitions.fadeSlide(
+          ActivitiesHubScreen(vLeccionId: leccionId),
+          settings,
+        );
       case RouteNames.activities:
-        return MaterialPageRoute(builder: (_) => const ActivitiesHubScreen());
+        return RouteTransitions.fadeSlide(const ActivitiesHubScreen(), settings);
       case RouteNames.settings:
-        return MaterialPageRoute(builder: (_) => const SettingsScreen());
+        return RouteTransitions.fadeSlide(const SettingsScreen(), settings);
       case RouteNames.progress:
-        return MaterialPageRoute(builder: (_) => const ProgressScreen());
+        return RouteTransitions.fadeSlide(const ProgressScreen(), settings);
       case RouteNames.teacher:
-        return MaterialPageRoute(builder: (_) => const TeacherScreen());
+        return RouteTransitions.fadeSlide(const TeacherScreen(), settings);
       default:
-        return MaterialPageRoute(builder: (_) => const SplashScreen());
+        return RouteTransitions.fadeSlide(const SplashScreen(), settings);
     }
   }
 }

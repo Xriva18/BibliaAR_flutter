@@ -1,7 +1,8 @@
 import 'package:biblia_ar_flutter/core/accessibility/accessibility_sizes.dart';
+import 'package:biblia_ar_flutter/core/accessibility/biar_design_tokens.dart';
 import 'package:flutter/material.dart';
 
-// kguanoluisa, Tema accesible BIAR con contraste WCAG 2.1 AA y tipografia minima 16sp, sin nuevas variables, 2026-07-23
+// kguanoluisa, Tema accesible BIAR extendido con tokens semanticos y estilos de formulario, sin nuevas variables, 2026-07-23
 class BiarTheme {
   static const Color primaryColor = Color(0xFF1B4D8E);
   static const Color secondaryColor = Color(0xFFF4A024);
@@ -10,6 +11,8 @@ class BiarTheme {
   static const Color textPrimary = Color(0xFF1A1A1A);
   static const Color textSecondary = Color(0xFF4A4A4A);
   static const Color successColor = Color(0xFF2E7D32);
+  static const Color infoColor = Color(0xFF0277BD);
+  static const Color warningColor = Color(0xFFF57C00);
 
   static ThemeData light() {
     final colorScheme = ColorScheme.fromSeed(
@@ -79,8 +82,20 @@ class BiarTheme {
         color: surfaceColor,
         elevation: 2,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(BiarRadius.lg),
         ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(BiarRadius.md)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: BiarSpacing.md,
+          vertical: BiarSpacing.sm,
+        ),
+      ),
+      dividerTheme: const DividerThemeData(space: BiarSpacing.lg),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BiarRadius.md)),
       ),
     );
   }

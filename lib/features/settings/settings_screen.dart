@@ -1,8 +1,10 @@
+import 'package:biblia_ar_flutter/core/accessibility/biar_design_tokens.dart';
 import 'package:biblia_ar_flutter/features/profiles/perfil_provider.dart';
+import 'package:biblia_ar_flutter/shared/widgets/biar_section_header.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// kguanoluisa, Panel de configuracion sensorial accesible en menos de tres pasos, sin nuevas variables, 2026-07-23
+// kguanoluisa, Panel de accesibilidad agrupado por secciones con jerarquia visual clara, sin nuevas variables, 2026-07-23
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -35,46 +37,84 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Accesibilidad')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(BiarSpacing.md),
         children: [
-          SwitchListTile(
-            title: const Text('Intérprete LSE'),
-            value: configuracion.lseActivo,
-            onChanged: context.read<ConfiguracionProvider>().toggleLse,
+          const BiarSectionHeader(
+            vTitulo: 'Canales sensoriales',
+            vSubtitulo: 'Activa o desactiva las capas de apoyo',
+            vIcono: Icons.layers,
           ),
-          SwitchListTile(
-            title: const Text('Subtítulos'),
-            value: configuracion.subtitulosActivos,
-            onChanged: context.read<ConfiguracionProvider>().toggleSubtitulos,
+          Card(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  title: const Text('Intérprete LSE'),
+                  value: configuracion.lseActivo,
+                  onChanged: context.read<ConfiguracionProvider>().toggleLse,
+                ),
+                SwitchListTile(
+                  title: const Text('Subtítulos'),
+                  value: configuracion.subtitulosActivos,
+                  onChanged: context.read<ConfiguracionProvider>().toggleSubtitulos,
+                ),
+                SwitchListTile(
+                  title: const Text('Narración de audio'),
+                  value: configuracion.audioActivo,
+                  onChanged: context.read<ConfiguracionProvider>().toggleAudio,
+                ),
+                SwitchListTile(
+                  title: const Text('Pictogramas'),
+                  value: configuracion.pictogramasActivos,
+                  onChanged: context.read<ConfiguracionProvider>().togglePictogramas,
+                ),
+              ],
+            ),
           ),
-          SwitchListTile(
-            title: const Text('Narración de audio'),
-            value: configuracion.audioActivo,
-            onChanged: context.read<ConfiguracionProvider>().toggleAudio,
+          const SizedBox(height: BiarSpacing.lg),
+          const BiarSectionHeader(
+            vTitulo: 'Audio',
+            vSubtitulo: 'Velocidad y volumen de narración',
+            vIcono: Icons.volume_up,
           ),
-          SwitchListTile(
-            title: const Text('Pictogramas'),
-            value: configuracion.pictogramasActivos,
-            onChanged: context.read<ConfiguracionProvider>().togglePictogramas,
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(BiarSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Velocidad', style: Theme.of(context).textTheme.labelLarge),
+                  Slider(
+                    value: configuracion.velocidadAudio,
+                    min: 0.5,
+                    max: 2.0,
+                    divisions: 6,
+                    label: '${configuracion.velocidadAudio.toStringAsFixed(1)}x',
+                    onChanged: context.read<ConfiguracionProvider>().actualizarVelocidad,
+                  ),
+                  Text('Volumen', style: Theme.of(context).textTheme.labelLarge),
+                  Slider(
+                    value: configuracion.volumenAudio,
+                    min: 0,
+                    max: 1,
+                    divisions: 10,
+                    label: '${(configuracion.volumenAudio * 100).round()}%',
+                    onChanged: context.read<ConfiguracionProvider>().actualizarVolumen,
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 16),
-          Text('Velocidad de audio', style: Theme.of(context).textTheme.titleLarge),
-          Slider(
-            value: configuracion.velocidadAudio,
-            min: 0.5,
-            max: 2.0,
-            divisions: 6,
-            label: '${configuracion.velocidadAudio.toStringAsFixed(1)}x',
-            onChanged: context.read<ConfiguracionProvider>().actualizarVelocidad,
+          const SizedBox(height: BiarSpacing.lg),
+          const BiarSectionHeader(
+            vTitulo: 'Información',
+            vIcono: Icons.info_outline,
           ),
-          Text('Volumen', style: Theme.of(context).textTheme.titleLarge),
-          Slider(
-            value: configuracion.volumenAudio,
-            min: 0,
-            max: 1,
-            divisions: 10,
-            label: '${(configuracion.volumenAudio * 100).round()}%',
-            onChanged: context.read<ConfiguracionProvider>().actualizarVolumen,
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.save),
+              title: const Text('Los cambios se guardan automáticamente por perfil'),
+              subtitle: const Text('Tu configuración se aplica en lecciones y trámites'),
+            ),
           ),
         ],
       ),

@@ -53,7 +53,7 @@ class _UsageAlertListenerState extends State<UsageAlertListener> {
                 Navigator.pop(context);
                 Navigator.pushNamedAndRemoveUntil(
                   context,
-                  RouteNames.profiles,
+                  RouteNames.login,
                   (_) => false,
                 );
               },

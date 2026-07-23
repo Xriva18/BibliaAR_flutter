@@ -34,6 +34,7 @@ class MigrationV1 {
       titulo TEXT NOT NULL,
       referencia_biblica TEXT NOT NULL,
       contenido_multimedia_path TEXT NOT NULL,
+      categoria TEXT NOT NULL DEFAULT 'biblico',
       orden INTEGER NOT NULL DEFAULT 0,
       updated_at TEXT NOT NULL,
       sync_status TEXT NOT NULL DEFAULT 'local'

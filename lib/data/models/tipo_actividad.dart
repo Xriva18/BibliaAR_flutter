@@ -1,7 +1,8 @@
 enum TipoActividad {
   completar('completar'),
   ordenar('ordenar'),
-  identificar('identificar');
+  identificar('identificar'),
+  checklist('checklist');
 
   const TipoActividad(this.value);
   final String value;

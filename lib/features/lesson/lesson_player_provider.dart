@@ -26,12 +26,15 @@ class LessonPlayerProvider extends ChangeNotifier {
   int vIndiceFragmento = 0;
   bool vReproduciendo = false;
   bool vCargando = false;
+  String? vError;
 
   FragmentoNarrativo? get fragmentoActual {
     if (vFragmentos.isEmpty) {
       return null;
     }
-    return vFragmentos[vIndiceFragmento];
+    // kguanoluisa, Indice acotado para evitar RangeError al cambiar entre lecciones con distinto numero de fragmentos, sin nuevas variables, 2026-07-23
+    final indice = vIndiceFragmento.clamp(0, vFragmentos.length - 1);
+    return vFragmentos[indice];
   }
 
   bool get esUltimoFragmento => vIndiceFragmento >= vFragmentos.length - 1;
@@ -39,33 +42,76 @@ class LessonPlayerProvider extends ChangeNotifier {
 
   Future<void> cargarLeccion({int leccionId = 1, int? perfilId}) async {
     vCargando = true;
+    vError = null;
+    // kguanoluisa, Reinicia indice y reproduccion al cargar otra leccion, sin nuevas variables, 2026-07-23
+    vIndiceFragmento = 0;
+    vReproduciendo = false;
     notifyListeners();
 
-    vLeccion = await _leccionRepository.obtenerPorId(leccionId);
-    await _cargarFragmentosDesdeAssets();
+    try {
+      vLeccion = await _leccionRepository.obtenerPorId(leccionId);
+      await _cargarFragmentosDesdeAssets();
 
-    if (perfilId != null) {
-      await _progresoRepository.guardar(
-        Progreso(
-          perfilId: perfilId,
-          leccionId: leccionId,
-          estado: EstadoProgreso.enCurso,
-          fecha: DateTime.now(),
-        ),
-      );
+      if (perfilId != null) {
+        await _progresoRepository.guardar(
+          Progreso(
+            perfilId: perfilId,
+            leccionId: leccionId,
+            estado: EstadoProgreso.enCurso,
+            fecha: DateTime.now(),
+          ),
+        );
+      }
+    } catch (error) {
+      vError = error.toString();
+    } finally {
+      vCargando = false;
+      notifyListeners();
     }
-
-    vCargando = false;
-    notifyListeners();
   }
 
-  Future<void> _cargarFragmentosDesdeAssets() async {
-    final raw = await rootBundle.loadString(AppConstants.leccionBuenSamaritanoPath);
+  Future<void> cargarLeccionPorPath({
+    required int leccionId,
+    required String assetsPath,
+    int? perfilId,
+  }) async {
+    vCargando = true;
+    vError = null;
+    // kguanoluisa, Reinicia indice y reproduccion al cargar otra leccion por path, sin nuevas variables, 2026-07-23
+    vIndiceFragmento = 0;
+    vReproduciendo = false;
+    notifyListeners();
+
+    try {
+      vLeccion = await _leccionRepository.obtenerPorId(leccionId);
+      await _cargarFragmentosDesdeAssets(path: assetsPath);
+
+      if (perfilId != null && leccionId > 0) {
+        await _progresoRepository.guardar(
+          Progreso(
+            perfilId: perfilId,
+            leccionId: leccionId,
+            estado: EstadoProgreso.enCurso,
+            fecha: DateTime.now(),
+          ),
+        );
+      }
+    } catch (error) {
+      vError = error.toString();
+    } finally {
+      vCargando = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _cargarFragmentosDesdeAssets({String? path}) async {
+    final fragmentsPath = path ?? AppConstants.leccionBuenSamaritanoPath;
+    final raw = await rootBundle.loadString(fragmentsPath);
     final data = jsonDecode(raw) as Map<String, dynamic>;
     final fragmentosJson = data['fragmentos'] as List<dynamic>;
 
-    final subtitulosRaw =
-        await rootBundle.loadString(AppConstants.subtitulosBuenSamaritanoPath);
+    final subtitulosPath = fragmentsPath.replaceAll('fragments.json', 'subtitles.json');
+    final subtitulosRaw = await rootBundle.loadString(subtitulosPath);
     final subtitulosData = jsonDecode(subtitulosRaw) as Map<String, dynamic>;
     final subtitulos = subtitulosData['fragmentos'] as List<dynamic>;
 
@@ -80,6 +126,12 @@ class LessonPlayerProvider extends ChangeNotifier {
       map['pictogramas'] = subtitulo['pictogramas'] ?? [];
       return FragmentoNarrativo.fromMap(map);
     }).toList();
+
+    if (vFragmentos.isNotEmpty) {
+      vIndiceFragmento = vIndiceFragmento.clamp(0, vFragmentos.length - 1);
+    } else {
+      vIndiceFragmento = 0;
+    }
   }
 
   void alternarReproduccion() {
