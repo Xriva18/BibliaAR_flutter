@@ -2,11 +2,12 @@ import 'dart:convert';
 
 import 'package:biblia_ar_flutter/data/database/migrations/migration_v1.dart';
 import 'package:biblia_ar_flutter/data/database/migrations/migration_v2.dart';
+import 'package:biblia_ar_flutter/data/database/migrations/migration_v3.dart';
 import 'package:biblia_ar_flutter/data/models/leccion_categoria.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
-// kguanoluisa, Base de datos SQLite con migracion v2 de categoria en lecciones, variable v_database, 2026-07-23
+// kguanoluisa, Base de datos SQLite con migracion v3 de campos docente en lecciones, variable v_database, 2026-07-23
 class AppDatabase {
   AppDatabase._();
 
@@ -29,7 +30,7 @@ class AppDatabase {
 
     return openDatabase(
       path,
-      version: MigrationV2.version,
+      version: MigrationV3.version,
       onCreate: (db, version) async {
         for (final statement in MigrationV1.statements) {
           await db.execute(statement);
@@ -39,6 +40,11 @@ class AppDatabase {
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < MigrationV2.version) {
           for (final statement in MigrationV2.statements) {
+            await db.execute(statement);
+          }
+        }
+        if (oldVersion < MigrationV3.version) {
+          for (final statement in MigrationV3.statements) {
             await db.execute(statement);
           }
         }

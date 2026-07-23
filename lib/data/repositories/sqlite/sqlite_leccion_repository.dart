@@ -40,4 +40,23 @@ class SqliteLeccionRepository implements LeccionRepository {
     }
     return Leccion.fromMap(rows.first);
   }
+
+  @override
+  Future<Leccion> crear(Leccion leccion) async {
+    final db = await _database.database;
+    final id = await db.insert('lecciones', leccion.toMap());
+    final creada = await obtenerPorId(id);
+    return creada!;
+  }
+
+  @override
+  Future<int> obtenerMaxOrden() async {
+    final db = await _database.database;
+    final rows = await db.rawQuery('SELECT MAX(orden) as max_orden FROM lecciones');
+    final valor = rows.first['max_orden'];
+    if (valor == null) {
+      return 0;
+    }
+    return valor as int;
+  }
 }

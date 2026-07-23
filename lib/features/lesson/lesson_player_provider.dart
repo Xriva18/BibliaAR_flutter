@@ -50,7 +50,20 @@ class LessonPlayerProvider extends ChangeNotifier {
 
     try {
       vLeccion = await _leccionRepository.obtenerPorId(leccionId);
-      await _cargarFragmentosDesdeAssets();
+      if (vLeccion == null) {
+        vError = 'Lección no encontrada';
+        return;
+      }
+
+      // kguanoluisa, Carga fragmento en memoria para lecciones docente con texto en BD, sin nuevas variables, 2026-07-23
+      if (vLeccion!.esLeccionDocente) {
+        await _cargarFragmentosDesdeLeccion(vLeccion!);
+      } else {
+        final path = vLeccion!.contenidoMultimediaPath.isNotEmpty
+            ? vLeccion!.contenidoMultimediaPath
+            : null;
+        await _cargarFragmentosDesdeAssets(path: path);
+      }
 
       if (perfilId != null) {
         await _progresoRepository.guardar(
@@ -84,7 +97,16 @@ class LessonPlayerProvider extends ChangeNotifier {
 
     try {
       vLeccion = await _leccionRepository.obtenerPorId(leccionId);
-      await _cargarFragmentosDesdeAssets(path: assetsPath);
+      if (vLeccion == null) {
+        vError = 'Lección no encontrada';
+        return;
+      }
+
+      if (vLeccion!.esLeccionDocente) {
+        await _cargarFragmentosDesdeLeccion(vLeccion!);
+      } else {
+        await _cargarFragmentosDesdeAssets(path: assetsPath.isNotEmpty ? assetsPath : null);
+      }
 
       if (perfilId != null && leccionId > 0) {
         await _progresoRepository.guardar(
@@ -102,6 +124,25 @@ class LessonPlayerProvider extends ChangeNotifier {
       vCargando = false;
       notifyListeners();
     }
+  }
+
+  Future<void> _cargarFragmentosDesdeLeccion(Leccion leccion) async {
+    final subtitulo =
+        '${leccion.historiaTexto}\n\n${leccion.versiculoReferencia}: ${leccion.versiculoTexto}';
+    vFragmentos = [
+      FragmentoNarrativo(
+        id: 1,
+        titulo: leccion.titulo,
+        descripcion: leccion.historiaTexto,
+        ilustracionAsset: '',
+        videoLseAsset: '',
+        audioAsset: '',
+        duracionMs: 6000,
+        pictogramas: [leccion.pictograma],
+        textoSubtitulo: subtitulo,
+      ),
+    ];
+    vIndiceFragmento = 0;
   }
 
   Future<void> _cargarFragmentosDesdeAssets({String? path}) async {

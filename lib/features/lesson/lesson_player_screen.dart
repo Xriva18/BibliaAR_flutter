@@ -9,9 +9,11 @@ import 'package:biblia_ar_flutter/shared/widgets/content_player_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// kguanoluisa, Reproductor de leccion refactorizado con ContentPlayerScaffold y acceso a vista AR simulada, sin nuevas variables, 2026-07-23
+// kguanoluisa, Reproductor de leccion con leccionId por ruta y soporte de contenido docente, variable v_leccionId, 2026-07-23
 class LessonPlayerScreen extends StatefulWidget {
-  const LessonPlayerScreen({super.key});
+  const LessonPlayerScreen({super.key, this.vLeccionId = 1});
+
+  final int vLeccionId;
 
   @override
   State<LessonPlayerScreen> createState() => _LessonPlayerScreenState();
@@ -31,7 +33,10 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
       await context.read<ConfiguracionProvider>().cargar(perfil!.id!);
     }
     if (!mounted) return;
-    await context.read<LessonPlayerProvider>().cargarLeccion(perfilId: perfil?.id);
+    await context.read<LessonPlayerProvider>().cargarLeccion(
+          leccionId: widget.vLeccionId,
+          perfilId: perfil?.id,
+        );
   }
 
   Future<void> _finalizarLeccion() async {

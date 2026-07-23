@@ -1,16 +1,23 @@
 import 'package:biblia_ar_flutter/core/accessibility/biar_design_tokens.dart';
+import 'package:biblia_ar_flutter/core/accessibility/biar_pictogram_icons.dart';
 import 'package:biblia_ar_flutter/core/accessibility/biar_theme.dart';
+import 'package:biblia_ar_flutter/core/di/repository_provider.dart';
 import 'package:biblia_ar_flutter/core/routing/route_names.dart';
 import 'package:biblia_ar_flutter/core/session/usage_timer_service.dart';
+import 'package:biblia_ar_flutter/data/models/progreso.dart';
 import 'package:biblia_ar_flutter/data/models/tipo_usuario.dart';
 import 'package:biblia_ar_flutter/features/auth/auth_provider.dart';
+import 'package:biblia_ar_flutter/features/lesson/leccion_estado_helper.dart';
+import 'package:biblia_ar_flutter/features/lesson/leccion_provider.dart';
 import 'package:biblia_ar_flutter/features/profiles/perfil_provider.dart';
 import 'package:biblia_ar_flutter/shared/widgets/biar_menu_card.dart';
+import 'package:biblia_ar_flutter/shared/widgets/biar_section_header.dart';
+import 'package:biblia_ar_flutter/shared/widgets/lesson_card.dart';
 import 'package:biblia_ar_flutter/shared/widgets/usage_alert_listener.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// kguanoluisa, Home rediseñado con grid de BiarMenuCard, badge de rol y acceso a tramites, sin nuevas variables, 2026-07-23
+// kguanoluisa, Home con seccion Historias dinamica desde LeccionProvider y grid de accesos, variables v_progresos, 2026-07-23
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -19,6 +26,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  List<Progreso> vProgresos = [];
+
   @override
   void initState() {
     super.initState();
@@ -28,8 +37,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final perfil = context.read<PerfilProvider>().vPerfilActivo;
       if (perfil?.id != null) {
         await context.read<ConfiguracionProvider>().cargar(perfil!.id!);
+        await _cargarProgresos(perfil.id!);
       }
+      if (!mounted) return;
+      await context.read<LeccionProvider>().cargarLeccionesBiblicas();
     });
+  }
+
+  Future<void> _cargarProgresos(int perfilId) async {
+    final repos = context.read<RepositoryProvider>();
+    final progresos = await repos.progresoRepository.obtenerPorPerfil(perfilId);
+    if (!mounted) return;
+    setState(() => vProgresos = progresos);
   }
 
   @override
@@ -61,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final perfil = context.watch<PerfilProvider>().vPerfilActivo;
     final esDocente = perfil?.tipoUsuario == TipoUsuario.docente;
     final rolLabel = esDocente ? 'Docente' : 'Niño';
+    final leccionProvider = context.watch<LeccionProvider>();
 
     return UsageAlertListener(
       child: Scaffold(
@@ -91,6 +111,54 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ],
               ),
               const SizedBox(height: BiarSpacing.md),
+              const BiarSectionHeader(
+                vTitulo: 'Historias',
+                vIcono: BiarModuleIcons.historias,
+              ),
+              const SizedBox(height: BiarSpacing.sm),
+              if (leccionProvider.vCargando)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: BiarSpacing.md),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (leccionProvider.vLeccionesBiblicas.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: BiarSpacing.md),
+                  child: Text('No hay historias disponibles.'),
+                )
+              else
+                SizedBox(
+                  height: 120,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: leccionProvider.vLeccionesBiblicas.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: BiarSpacing.sm),
+                    itemBuilder: (context, index) {
+                      final leccion = leccionProvider.vLeccionesBiblicas[index];
+                      final estado = perfil?.id != null
+                          ? LeccionEstadoHelper.resolverEstadoLeccion(
+                              leccionId: leccion.id!,
+                              progresos: vProgresos,
+                            )
+                          : null;
+                      return SizedBox(
+                        width: 280,
+                        child: LessonCard(
+                          vTitulo: leccion.titulo,
+                          vVersiculoReferencia: leccion.versiculoDisplay,
+                          vIcono: BiarPictogramIcons.iconoPara(leccion.pictograma),
+                          vEstadoLabel: estado,
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            RouteNames.lesson,
+                            arguments: leccion.id,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              const SizedBox(height: BiarSpacing.md),
               Expanded(
                 child: GridView.count(
                   crossAxisCount: 2,
@@ -98,12 +166,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   mainAxisSpacing: BiarSpacing.sm,
                   childAspectRatio: 0.95,
                   children: [
-                    BiarMenuCard(
-                      vTitulo: 'Historias',
-                      vSubtitulo: 'El Buen Samaritano',
-                      vIcono: BiarModuleIcons.historias,
-                      onTap: () => Navigator.pushNamed(context, RouteNames.lesson),
-                    ),
                     BiarMenuCard(
                       vTitulo: 'Actividades',
                       vSubtitulo: 'Juegos de repaso',
@@ -132,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     if (esDocente)
                       BiarMenuCard(
                         vTitulo: 'Panel docente',
-                        vSubtitulo: 'Seguimiento local',
+                        vSubtitulo: 'Lecciones y seguimiento',
                         vIcono: BiarModuleIcons.docente,
                         onTap: () => Navigator.pushNamed(context, RouteNames.teacher),
                       ),

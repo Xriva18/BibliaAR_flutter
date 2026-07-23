@@ -10,6 +10,7 @@ import 'package:biblia_ar_flutter/features/lesson/lesson_player_screen.dart';
 import 'package:biblia_ar_flutter/features/progress/progress_screen.dart';
 import 'package:biblia_ar_flutter/features/settings/settings_screen.dart';
 import 'package:biblia_ar_flutter/features/splash/splash_screen.dart';
+import 'package:biblia_ar_flutter/features/teacher/new_lesson_screen.dart';
 import 'package:biblia_ar_flutter/features/teacher/teacher_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -27,7 +28,11 @@ class AppRouter {
       case RouteNames.home:
         return RouteTransitions.fadeSlide(const HomeScreen(), settings);
       case RouteNames.lesson:
-        return RouteTransitions.fadeSlide(const LessonPlayerScreen(), settings);
+        final leccionId = settings.arguments as int? ?? 1;
+        return RouteTransitions.fadeSlide(
+          LessonPlayerScreen(vLeccionId: leccionId),
+          settings,
+        );
       case RouteNames.arPreview:
         final args = settings.arguments as ArPreviewArgs?;
         return RouteTransitions.fadeSlide(
@@ -44,6 +49,8 @@ class AppRouter {
         return RouteTransitions.fadeSlide(const ProgressScreen(), settings);
       case RouteNames.teacher:
         return RouteTransitions.fadeSlide(const TeacherScreen(), settings);
+      case RouteNames.teacherNewLesson:
+        return RouteTransitions.fadeSlide(const NewLessonScreen(), settings);
       default:
         return RouteTransitions.fadeSlide(const SplashScreen(), settings);
     }

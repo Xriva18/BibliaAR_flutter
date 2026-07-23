@@ -12,4 +12,5 @@ class RouteNames {
   static const String settings = '/settings';
   static const String progress = '/progress';
   static const String teacher = '/teacher';
+  static const String teacherNewLesson = '/teacher/lesson/new';
 }

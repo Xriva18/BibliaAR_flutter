@@ -1,12 +1,17 @@
+import 'package:biblia_ar_flutter/core/accessibility/biar_design_tokens.dart';
+import 'package:biblia_ar_flutter/core/accessibility/biar_pictogram_icons.dart';
 import 'package:biblia_ar_flutter/core/di/repository_provider.dart';
-import 'package:biblia_ar_flutter/data/models/estado_progreso.dart';
+import 'package:biblia_ar_flutter/core/routing/route_names.dart';
 import 'package:biblia_ar_flutter/data/models/leccion.dart';
 import 'package:biblia_ar_flutter/data/models/progreso.dart';
+import 'package:biblia_ar_flutter/features/lesson/leccion_estado_helper.dart';
 import 'package:biblia_ar_flutter/features/profiles/perfil_provider.dart';
+import 'package:biblia_ar_flutter/shared/widgets/biar_loading_view.dart';
+import 'package:biblia_ar_flutter/shared/widgets/lesson_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// kguanoluisa, Pantalla de progreso local del nino con lecciones completadas, sin nuevas variables, 2026-07-23
+// kguanoluisa, Pantalla de progreso con LessonCard unificada y estado por leccion, variables v_lecciones y v_progresos, 2026-07-23
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
 
@@ -34,7 +39,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
     final lecciones = await repos.leccionRepository.obtenerTodas();
     final progresos = await repos.progresoRepository.obtenerPorPerfil(perfil!.id!);
-
+    if (!mounted) return;
     setState(() {
       vLecciones = lecciones;
       vProgresos = progresos;
@@ -42,38 +47,31 @@ class _ProgressScreenState extends State<ProgressScreen> {
     });
   }
 
-  String _estadoLeccion(int leccionId) {
-    final progreso = vProgresos.where((p) => p.leccionId == leccionId).toList();
-    if (progreso.isEmpty) {
-      return 'No iniciada';
-    }
-    switch (progreso.first.estado) {
-      case EstadoProgreso.completada:
-        return 'Completada';
-      case EstadoProgreso.enCurso:
-        return 'En curso';
-      case EstadoProgreso.noIniciada:
-        return 'No iniciada';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Mi progreso')),
       body: vCargando
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
+          ? const BiarLoadingView(vMensaje: 'Cargando progreso...')
+          : ListView.separated(
+              padding: const EdgeInsets.all(BiarSpacing.md),
               itemCount: vLecciones.length,
+              separatorBuilder: (_, __) => const SizedBox(height: BiarSpacing.sm),
               itemBuilder: (context, index) {
                 final leccion = vLecciones[index];
-                return Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.auto_stories),
-                    title: Text(leccion.titulo),
-                    subtitle: Text(leccion.referenciaBiblica),
-                    trailing: Text(_estadoLeccion(leccion.id!)),
+                final estado = LeccionEstadoHelper.resolverEstadoLeccion(
+                  leccionId: leccion.id!,
+                  progresos: vProgresos,
+                );
+                return LessonCard(
+                  vTitulo: leccion.titulo,
+                  vVersiculoReferencia: leccion.versiculoDisplay,
+                  vIcono: BiarPictogramIcons.iconoPara(leccion.pictograma),
+                  vEstadoLabel: estado,
+                  onTap: () => Navigator.pushNamed(
+                    context,
+                    RouteNames.lesson,
+                    arguments: leccion.id,
                   ),
                 );
               },

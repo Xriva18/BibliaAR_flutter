@@ -1,14 +1,20 @@
 import 'package:biblia_ar_flutter/core/accessibility/biar_design_tokens.dart';
+import 'package:biblia_ar_flutter/core/accessibility/biar_pictogram_icons.dart';
 import 'package:biblia_ar_flutter/core/di/repository_provider.dart';
+import 'package:biblia_ar_flutter/core/routing/route_names.dart';
+import 'package:biblia_ar_flutter/data/models/leccion.dart';
 import 'package:biblia_ar_flutter/data/models/perfil.dart';
 import 'package:biblia_ar_flutter/data/models/resultado_actividad.dart';
 import 'package:biblia_ar_flutter/data/models/tipo_usuario.dart';
+import 'package:biblia_ar_flutter/features/lesson/leccion_provider.dart';
+import 'package:biblia_ar_flutter/features/teacher/lesson_detail_screen.dart';
 import 'package:biblia_ar_flutter/shared/widgets/biar_empty_view.dart';
 import 'package:biblia_ar_flutter/shared/widgets/biar_loading_view.dart';
+import 'package:biblia_ar_flutter/shared/widgets/lesson_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// kguanoluisa, Panel docente mobile-first con lista de ninos y detalle de resultados agrupados, sin nuevas variables, 2026-07-23
+// kguanoluisa, Panel docente con tabs de lecciones y seguimiento de ninos, sin nuevas variables, 2026-07-23
 class TeacherScreen extends StatefulWidget {
   const TeacherScreen({super.key});
 
@@ -16,16 +22,28 @@ class TeacherScreen extends StatefulWidget {
   State<TeacherScreen> createState() => _TeacherScreenState();
 }
 
-class _TeacherScreenState extends State<TeacherScreen> {
+class _TeacherScreenState extends State<TeacherScreen> with SingleTickerProviderStateMixin {
+  late final TabController vTabController;
   List<Perfil> vPerfilesNinos = [];
   Perfil? vPerfilSeleccionado;
   List<ResultadoActividad> vResultados = [];
-  bool vCargando = true;
+  bool vCargandoSeguimiento = true;
 
   @override
   void initState() {
     super.initState();
-    _cargarPerfiles();
+    vTabController = TabController(length: 2, vsync: this);
+    vTabController.addListener(() => setState(() {}));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LeccionProvider>().cargarLeccionesBiblicas();
+      _cargarPerfiles();
+    });
+  }
+
+  @override
+  void dispose() {
+    vTabController.dispose();
+    super.dispose();
   }
 
   Future<void> _cargarPerfiles() async {
@@ -34,7 +52,7 @@ class _TeacherScreenState extends State<TeacherScreen> {
     if (!mounted) return;
     setState(() {
       vPerfilesNinos = perfiles;
-      vCargando = false;
+      vCargandoSeguimiento = false;
     });
   }
 
@@ -46,6 +64,13 @@ class _TeacherScreenState extends State<TeacherScreen> {
       vPerfilSeleccionado = perfil;
       vResultados = resultados;
     });
+  }
+
+  void _abrirDetalleLeccion(Leccion leccion) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => LessonDetailScreen(vLeccion: leccion)),
+    );
   }
 
   Map<int, List<ResultadoActividad>> _agruparPorActividad() {
@@ -65,44 +90,102 @@ class _TeacherScreenState extends State<TeacherScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Panel docente'),
+        bottom: TabBar(
+          controller: vTabController,
+          tabs: const [
+            Tab(text: 'Lecciones', icon: Icon(Icons.auto_stories)),
+            Tab(text: 'Seguimiento', icon: Icon(Icons.people)),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: vTabController,
+        children: [
+          _buildTabLecciones(),
+          _buildTabSeguimiento(),
+        ],
+      ),
+      floatingActionButton: vTabController.index == 0
+          ? FloatingActionButton.extended(
+              onPressed: () => Navigator.pushNamed(context, RouteNames.teacherNewLesson),
+              icon: const Icon(Icons.add),
+              label: const Text('Nueva lección'),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildTabLecciones() {
+    final leccionProvider = context.watch<LeccionProvider>();
+
+    if (leccionProvider.vCargando) {
+      return const BiarLoadingView(vMensaje: 'Cargando lecciones...');
+    }
+
+    if (leccionProvider.vLeccionesBiblicas.isEmpty) {
+      return BiarEmptyView(
+        vMensaje: 'No hay lecciones registradas.',
+        vAccionLabel: 'Crear lección',
+        onAccion: () => Navigator.pushNamed(context, RouteNames.teacherNewLesson),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(BiarSpacing.md),
+      itemCount: leccionProvider.vLeccionesBiblicas.length,
+      separatorBuilder: (_, __) => const SizedBox(height: BiarSpacing.sm),
+      itemBuilder: (context, index) {
+        final leccion = leccionProvider.vLeccionesBiblicas[index];
+        return LessonCard(
+          vTitulo: leccion.titulo,
+          vVersiculoReferencia: leccion.versiculoDisplay,
+          vIcono: BiarPictogramIcons.iconoPara(leccion.pictograma),
+          onTap: () => _abrirDetalleLeccion(leccion),
+        );
+      },
+    );
+  }
+
+  Widget _buildTabSeguimiento() {
+    if (vCargandoSeguimiento) {
+      return const BiarLoadingView(vMensaje: 'Cargando perfiles...');
+    }
+
     final ancho = MediaQuery.sizeOf(context).width;
     final esPantallaAncha = ancho >= 720;
 
-    if (vCargando) {
-      return const Scaffold(
-        body: BiarLoadingView(vMensaje: 'Cargando perfiles...'),
-      );
-    }
-
     if (!esPantallaAncha) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(vPerfilSeleccionado == null ? 'Panel docente' : vPerfilSeleccionado!.nombre),
-          leading: vPerfilSeleccionado != null
-              ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => setState(() {
-                    vPerfilSeleccionado = null;
-                    vResultados = [];
-                  }),
-                )
-              : null,
-        ),
-        body: vPerfilSeleccionado == null
-            ? _buildListaNinos()
-            : _buildDetalleResultados(),
+      return Column(
+        children: [
+          if (vPerfilSeleccionado != null)
+            ListTile(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => setState(() {
+                  vPerfilSeleccionado = null;
+                  vResultados = [];
+                }),
+              ),
+              title: Text(vPerfilSeleccionado!.nombre),
+            ),
+          Expanded(
+            child: vPerfilSeleccionado == null
+                ? _buildListaNinos()
+                : _buildDetalleResultados(),
+          ),
+        ],
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Panel docente')),
-      body: Row(
-        children: [
-          SizedBox(width: 280, child: _buildListaNinos()),
-          const VerticalDivider(width: 1),
-          Expanded(child: _buildDetalleResultados()),
-        ],
-      ),
+    return Row(
+      children: [
+        SizedBox(width: 280, child: _buildListaNinos()),
+        const VerticalDivider(width: 1),
+        Expanded(child: _buildDetalleResultados()),
+      ],
     );
   }
 

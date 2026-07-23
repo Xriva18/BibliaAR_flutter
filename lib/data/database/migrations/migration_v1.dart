@@ -36,6 +36,10 @@ class MigrationV1 {
       contenido_multimedia_path TEXT NOT NULL,
       categoria TEXT NOT NULL DEFAULT 'biblico',
       orden INTEGER NOT NULL DEFAULT 0,
+      historia_texto TEXT NOT NULL DEFAULT '',
+      versiculo_referencia TEXT NOT NULL DEFAULT '',
+      versiculo_texto TEXT NOT NULL DEFAULT '',
+      pictograma TEXT NOT NULL DEFAULT 'historias',
       updated_at TEXT NOT NULL,
       sync_status TEXT NOT NULL DEFAULT 'local'
     )
