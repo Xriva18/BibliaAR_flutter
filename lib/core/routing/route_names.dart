@@ -6,7 +6,9 @@ class RouteNames {
   static const String home = '/home';
   static const String lesson = '/lesson';
   static const String arPreview = '/ar-preview';
-  static const String tramites = '/tramites';
+  static const String conadis = '/conadis';
+  static const String conadisResultado = '/conadis/resultado';
+  static const String orientacionCiudadana = '/orientacion-ciudadana';
   static const String activities = '/activities';
   static const String activityDetail = '/activities/detail';
   static const String settings = '/settings';
