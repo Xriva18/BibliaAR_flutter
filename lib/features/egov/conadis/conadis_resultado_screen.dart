@@ -29,7 +29,6 @@ class _ConadisResultadoScreenState extends State<ConadisResultadoScreen> {
     super.initState();
     vFragmentos = ConadisFragmentBuilder.construirFragmentosResultado(
       certificado: widget.vArgs.certificado,
-      modo: widget.vArgs.modo,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) => _cargarConfiguracion());
   }

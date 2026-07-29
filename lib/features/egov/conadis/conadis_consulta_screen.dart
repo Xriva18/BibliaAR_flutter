@@ -1,7 +1,6 @@
 import 'package:biblia_ar_flutter/core/accessibility/accessibility_sizes.dart';
 import 'package:biblia_ar_flutter/core/accessibility/biar_design_tokens.dart';
 import 'package:biblia_ar_flutter/core/accessibility/biar_pictogram_icons.dart';
-import 'package:biblia_ar_flutter/core/accessibility/biar_theme.dart';
 import 'package:biblia_ar_flutter/core/feedback/multimodal_feedback.dart';
 import 'package:biblia_ar_flutter/core/routing/route_names.dart';
 import 'package:biblia_ar_flutter/data/models/fragmento_narrativo.dart';
@@ -9,7 +8,6 @@ import 'package:biblia_ar_flutter/features/egov/conadis/conadis_assets_loader.da
 import 'package:biblia_ar_flutter/features/egov/conadis/conadis_formato_validator.dart';
 import 'package:biblia_ar_flutter/features/egov/conadis/conadis_provider.dart';
 import 'package:biblia_ar_flutter/features/egov/conadis/conadis_resultado_args.dart';
-import 'package:biblia_ar_flutter/features/egov/conadis/modo_consulta_conadis.dart';
 import 'package:biblia_ar_flutter/features/profiles/perfil_provider.dart';
 import 'package:biblia_ar_flutter/shared/widgets/biar_button.dart';
 import 'package:biblia_ar_flutter/shared/widgets/floating_lse_player.dart';
@@ -18,7 +16,7 @@ import 'package:biblia_ar_flutter/shared/widgets/subtitle_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// kguanoluisa, Pantalla de consulta CONADIS con aviso simulacion selector modo y validacion de formato, variables v_numeroController y v_fragmentoAyuda, 2026-07-29
+// kguanoluisa, Pantalla de consulta CONADIS simplificada sin modo ni aviso de simulacion, variables v_numeroController y v_fragmentoAyuda, 2026-07-29
 class ConadisConsultaScreen extends StatefulWidget {
   const ConadisConsultaScreen({super.key});
 
@@ -78,7 +76,7 @@ class _ConadisConsultaScreenState extends State<ConadisConsultaScreen> {
       await MultimodalFeedback.info(
         context,
         mensaje:
-            'No encontramos ese número en el registro simulado. Verifica el número o inicia el trámite oficial.',
+            'No encontramos ese número en el registro. Verifica el número o inicia el trámite oficial.',
         pictogramas: const ['certificado', 'tramite'],
         onAccion: () => Navigator.pushNamed(context, RouteNames.orientacionCiudadana),
         etiquetaAccion: 'Ir a Orientación Ciudadana',
@@ -89,10 +87,7 @@ class _ConadisConsultaScreenState extends State<ConadisConsultaScreen> {
     Navigator.pushNamed(
       context,
       RouteNames.conadisResultado,
-      arguments: ConadisResultadoArgs(
-        certificado: resultado,
-        modo: provider.vModoConsulta,
-      ),
+      arguments: ConadisResultadoArgs(certificado: resultado),
     );
   }
 
@@ -106,7 +101,6 @@ class _ConadisConsultaScreenState extends State<ConadisConsultaScreen> {
   Widget build(BuildContext context) {
     final configuracion = context.watch<ConfiguracionProvider>().vConfiguracion;
     final consultando = context.watch<ConadisProvider>().vConsultando;
-    final modo = context.watch<ConadisProvider>().vModoConsulta;
     final fragmento = vFragmentoAyuda;
 
     return Scaffold(
@@ -118,59 +112,6 @@ class _ConadisConsultaScreenState extends State<ConadisConsultaScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(BiarSpacing.md),
-                  decoration: BoxDecoration(
-                    color: BiarTheme.warningColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(BiarRadius.md),
-                    border: Border.all(color: BiarTheme.warningColor),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(Icons.info_outline, color: BiarTheme.warningColor, size: 32),
-                      const SizedBox(height: BiarSpacing.sm),
-                      Text(
-                        'Esta consulta es una simulación educativa. No reemplaza el trámite oficial de CONADIS.',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontSize: AccessibilitySizes.minFontSize,
-                            ),
-                      ),
-                      if (configuracion?.subtitulosActivos ?? true) ...[
-                        const SizedBox(height: BiarSpacing.sm),
-                        SubtitleOverlay(
-                          vTexto:
-                              'Simulación educativa. No es el sistema real de CONADIS.',
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: BiarSpacing.md),
-                Text(
-                  'Modo de consulta',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: BiarSpacing.sm),
-                SegmentedButton<ModoConsultaConadis>(
-                  segments: const [
-                    ButtonSegment(
-                      value: ModoConsultaConadis.padres,
-                      label: Text('Padres'),
-                      icon: Icon(Icons.family_restroom),
-                    ),
-                    ButtonSegment(
-                      value: ModoConsultaConadis.infantil,
-                      label: Text('Infantil'),
-                      icon: Icon(Icons.child_care),
-                    ),
-                  ],
-                  selected: {modo},
-                  onSelectionChanged: (seleccion) {
-                    context.read<ConadisProvider>().cambiarModo(seleccion.first);
-                  },
-                ),
-                const SizedBox(height: BiarSpacing.lg),
                 Row(
                   children: [
                     Icon(BiarPictogramIcons.iconoPara('certificado'), size: 32),

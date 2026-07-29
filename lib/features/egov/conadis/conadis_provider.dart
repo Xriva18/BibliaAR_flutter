@@ -1,10 +1,8 @@
 import 'package:biblia_ar_flutter/data/models/certificado_conadis.dart';
 import 'package:biblia_ar_flutter/data/repositories/interfaces/conadis_repository.dart';
 import 'package:biblia_ar_flutter/features/egov/conadis/conadis_formato_validator.dart';
-import 'package:biblia_ar_flutter/features/egov/conadis/modo_consulta_conadis.dart';
 import 'package:flutter/foundation.dart';
-
-// kguanoluisa, Provider de estado para consulta CONADIS offline con validacion y guardado opt-in, variables v_consultando, v_modoConsulta y v_ultimoResultado, 2026-07-29
+// kguanoluisa, Provider de estado para consulta CONADIS offline con validacion y guardado opt-in, variables v_consultando y v_ultimoResultado, 2026-07-29
 class ConadisProvider extends ChangeNotifier {
   ConadisProvider({required ConadisRepository conadisRepository})
       : _conadisRepository = conadisRepository;
@@ -12,13 +10,7 @@ class ConadisProvider extends ChangeNotifier {
   final ConadisRepository _conadisRepository;
 
   bool vConsultando = false;
-  ModoConsultaConadis vModoConsulta = ModoConsultaConadis.padres;
   CertificadoConadis? vUltimoResultado;
-
-  void cambiarModo(ModoConsultaConadis modo) {
-    vModoConsulta = modo;
-    notifyListeners();
-  }
 
   bool validarFormato(String numero) {
     return ConadisFormatoValidator.esFormatoValido(numero);

@@ -81,14 +81,16 @@ Widget _buildTestApp(Widget child) {
 }
 
 void main() {
-  testWidgets('ConadisConsultaScreen muestra aviso de simulacion', (tester) async {
+  testWidgets('ConadisConsultaScreen muestra campo de certificado y boton consultar', (tester) async {
     await tester.pumpWidget(_buildTestApp(const ConadisConsultaScreen()));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Verificar certificado CONADIS'), findsOneWidget);
-    expect(find.textContaining('simulación educativa'), findsOneWidget);
+    expect(find.text('Número de certificado'), findsWidgets);
     expect(find.text('Consultar'), findsOneWidget);
+    expect(find.textContaining('simulación educativa'), findsNothing);
+    expect(find.text('Modo de consulta'), findsNothing);
   });
 
   testWidgets('boton Consultar deshabilitado con formato invalido', (tester) async {
